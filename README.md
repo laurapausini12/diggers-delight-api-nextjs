@@ -1,1 +1,0 @@
-# diggers-delight-api-nextjs

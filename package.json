@@ -1,0 +1,19 @@
+{
+  "name": "diggers-delight-nextjs",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@types/node": "^15.12.2",
+    "@types/react": "^17.0.11",
+    "axios": "^1.7.2",
+    "https-proxy-agent": "^7.0.5",
+    "next": "^12.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typescript": "^4.3.5"
+  }
+}
