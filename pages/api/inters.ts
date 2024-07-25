@@ -23,9 +23,12 @@ async function getInters(req: NextApiRequest, res: NextApiResponse) {
 
 async function postInters(req: NextApiRequest, res: NextApiResponse) {
   const inters: { address: string; time: number }[] = req.body;
-  const values = inters.map((inter) => [inter.address, inter.time]);
   createIntersTableIfNotExists();
   await emptyIntersTable();
+  const values: [string, number][] = inters.map((inter) => [
+    inter.address,
+    inter.time,
+  ]);
   try {
     await insertInters(values);
     res.status(200).json({ message: "Inters saved successfully" });
