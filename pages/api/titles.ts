@@ -2,12 +2,13 @@ import { NextApiRequest, NextApiResponse } from "next";
 import axios, { CancelTokenSource } from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fs from "fs";
+import { getFastestInter, deleteInter } from "@services/dbService";
+import { get } from "http";
 
 const BASE_URL = "https://new.myfreemp3juices.cc/api/";
 const ENDPOINT =
   "api_search.php?callback=jQuery2130003814019662980783_1697629885270";
 const URL = `${BASE_URL}${ENDPOINT}`;
-const INTERS_CSV_FILENAME = "inters.csv";
 const TIMEOUT = 4500;
 
 async function postData(
@@ -58,19 +59,6 @@ function extractStringBetweenFirstAndLastParentheses(str: string): string {
   return str.slice(firstParenthesesIndex + 1, lastParenthesesIndex);
 }
 
-function getFastestInterFromFile(): string {
-  const inters = fs.readFileSync(INTERS_CSV_FILENAME, "utf-8");
-  const intersArray = inters.split("\n");
-  const fastestInter = intersArray.reduce((acc, inter) => {
-    const [url, time] = inter.split(",");
-    if (!acc || parseFloat(time) < parseFloat(acc.time)) {
-      return { url, time };
-    }
-    return acc;
-  }, null as { url: string; time: string } | null);
-  return fastestInter ? fastestInter.url : "";
-}
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -90,13 +78,20 @@ export default async function handler(
     return;
   }
 
-  let inter = req.query.inter;
-  if (typeof inter !== "string" || !inter.trim()) {
-    inter = getFastestInterFromFile();
+  let interQuery = req.query.inter;
+  let inter: string | null = null;
+  if (typeof interQuery !== "string") {
+    res.status(400).json({ error: "Inter parameter must be a string" });
+    return;
+  }
+  if (!interQuery.trim()) {
+    inter = await getFastestInter();
     if (!inter) {
       res.status(500).json({ error: "No inters available" });
       return;
     }
+  } else {
+    inter = interQuery;
   }
   console.log(`Using inter: ${inter}`);
 
