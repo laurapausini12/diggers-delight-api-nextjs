@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import axios, { CancelTokenSource } from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import fs from "fs";
 import { getFastestInter, deleteInter } from "@services/dbService";
-import { get } from "http";
+import corsMiddleware from "@middlewares/corsMiddleware";
 
 const BASE_URL = "https://new.myfreemp3juices.cc/api/";
 const ENDPOINT =
@@ -59,10 +58,7 @@ function extractStringBetweenFirstAndLastParentheses(str: string): string {
   return str.slice(firstParenthesesIndex + 1, lastParenthesesIndex);
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -128,3 +124,5 @@ export default async function handler(
     }
   }
 }
+
+export default corsMiddleware(handler);

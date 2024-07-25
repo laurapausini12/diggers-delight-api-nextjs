@@ -16,7 +16,8 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@services/*": ["services/*"]
+      "@services/*": ["services/*"],
+      "@middlewares/*": ["middlewares/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
