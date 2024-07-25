@@ -1,60 +1,74 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import axios from "axios";
+import axios, { CancelTokenSource } from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fs from "fs";
-import { promisify } from "util";
 
-const appendFile = promisify(fs.appendFile);
+const BASE_URL = "https://new.myfreemp3juices.cc/api/";
+const ENDPOINT =
+  "api_search.php?callback=jQuery2130003814019662980783_1697629885270";
+const URL = `${BASE_URL}${ENDPOINT}`;
+const INTERS_CSV_FILENAME = "inters.csv";
+const TIMEOUT = 4500;
 
 async function postData(
   url: string,
   interAddress: string,
   data: Record<string, any>
 ): Promise<any> {
+  // As Axios timeout is not working with https-proxy-agent, we also need to use a custom timeout.
+  const source: CancelTokenSource = axios.CancelToken.source();
+  const timeout = setTimeout(() => {
+    source.cancel();
+    console.log("Request canceled due to timeout");
+  }, TIMEOUT);
+
   try {
     const interAgent = new HttpsProxyAgent(interAddress);
-
     const response = await axios.post(url, data, {
       httpAgent: interAgent,
       httpsAgent: interAgent,
-      timeout: 5000,
+      timeout: TIMEOUT,
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      maxContentLength: 100 * 1024, // 100 KB
+      cancelToken: source.token,
     });
+    clearTimeout(timeout);
     return response.data;
   } catch (error) {
+    clearTimeout(timeout);
     if (axios.isAxiosError(error)) {
-      console.log(`Failed to post data: ${error.message}`);
+      if (axios.isCancel(error)) {
+        console.log("Request canceled:", error.message);
+      } else {
+        console.log(`Failed to post data: ${(error as any).message}`);
+      }
       throw new Error(`Failed to post data: ${error.message}`);
     } else {
       console.log("An unknown error occurred");
-      throw new Error("An unknown error occurred");
+      throw error;
     }
   }
 }
 
-class IntersSourceError extends Error {
-  constructor() {
-    super("Failed to fetch inters");
-    this.name = "IntersSourceError";
-  }
+function extractStringBetweenFirstAndLastParentheses(str: string): string {
+  const firstParenthesesIndex = str.indexOf("(");
+  const lastParenthesesIndex = str.lastIndexOf(")");
+  return str.slice(firstParenthesesIndex + 1, lastParenthesesIndex);
 }
 
-async function fetchRemInters(): Promise<string[]> {
-  const interApiUrl =
-    "https://api.proxyscrape.com/v3/free-proxy-list/get?request=displayproxies&proxy_format=protocolipport&format=text";
-  try {
-    const response = await axios.get(interApiUrl);
-    return response.data.split("\n").map((inter: string) => inter.trim());
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.log(`Failed to fetch inters: ${error.message}`);
-    } else {
-      console.log("An unknown error occurred");
+function getFastestInterFromFile(): string {
+  const inters = fs.readFileSync(INTERS_CSV_FILENAME, "utf-8");
+  const intersArray = inters.split("\n");
+  const fastestInter = intersArray.reduce((acc, inter) => {
+    const [url, time] = inter.split(",");
+    if (!acc || parseFloat(time) < parseFloat(acc.time)) {
+      return { url, time };
     }
-    throw new IntersSourceError();
-  }
+    return acc;
+  }, null as { url: string; time: string } | null);
+  return fastestInter ? fastestInter.url : "";
 }
 
 export default async function handler(
@@ -66,42 +80,56 @@ export default async function handler(
     return;
   }
 
-  let inters: string[] = [];
-  try {
-    inters = await fetchRemInters();
-  } catch (error) {
-    if (error instanceof IntersSourceError) {
-      res.status(500).json({ error: "Failed to fetch inters" });
-      return;
-    } else {
-      throw error;
-    }
+  const query = req.query.query;
+  if (typeof query !== "string") {
+    res.status(400).json({ error: "Query parameter must be a string" });
+    return;
+  }
+  if (!query.trim()) {
+    res.status(400).json({ error: "Query parameter is required" });
+    return;
   }
 
-  const BASE_URL = "https://new.myfreemp3juices.cc/api/";
-  const ENDPOINT =
-    "api_search.php?callback=jQuery2130003814019662980783_1697629885270";
-  const URL = `${BASE_URL}${ENDPOINT}`;
+  let inter = req.query.inter;
+  if (typeof inter !== "string" || !inter.trim()) {
+    inter = getFastestInterFromFile();
+    if (!inter) {
+      res.status(500).json({ error: "No inters available" });
+      return;
+    }
+  }
+  console.log(`Using inter: ${inter}`);
+
   let data = {
-    q: "jul",
+    q: query,
     page: "0",
   };
 
-  for (const inter of inters) {
+  const MAX_RETRIES = 3;
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    console.log(`Try number ${i + 1}`);
     try {
       const result: string = await postData(URL, inter, data);
-      await appendFile("valid_inter.txt", `${inter}`);
-      res.status(200).json(result);
-      return;
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(
-          `Failed to fetch data with proxy ${inter}: ${error.message}`
-        );
+      const jsonText = extractStringBetweenFirstAndLastParentheses(result);
+      const json = JSON.parse(jsonText);
+      if (json["response"] !== null) {
+        res.status(200).json(json["response"]);
+        return;
       } else {
-        console.error(`An unknown error occurred with proxy ${inter}`);
+        console.log(`Response null with proxy ${inter}. Retrying`);
       }
+    } catch (error) {
+      const errorMessagePrefixe = `Failed to fetch data with inter ${inter}: `;
+      let errorMessageBody = "";
+      if (error instanceof Error) {
+        errorMessageBody = error.message;
+      } else {
+        errorMessageBody = "An unknown error occurred";
+      }
+      res
+        .status(500)
+        .json({ error: `${errorMessagePrefixe}${errorMessageBody}` });
+      return;
     }
   }
-  res.status(500).json({ error: "Failed to fetch data with all inters" });
 }
