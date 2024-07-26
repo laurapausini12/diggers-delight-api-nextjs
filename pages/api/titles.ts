@@ -1,11 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import axios, { CancelTokenSource } from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import {
-  getMostAccurateInter,
-  deleteInter,
-  incrementFailureCount,
-} from "@src/dbService";
+import { getMostAccurateInter, incrementFailureCount } from "@src/dbService";
 import corsMiddleware from "@middlewares/corsMiddleware";
 
 const BASE_URL = "https://new.myfreemp3juices.cc/api/";
