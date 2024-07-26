@@ -1,22 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import {
-  createIntersTableIfNotExists,
-  emptyIntersTable,
-  getInters as getDbInters,
-  insertInters,
-} from "@services/dbService";
+import { getInters as getDbInters, resetAndInsertInters } from "@src/dbService";
 import corsMiddleware from "@middlewares/corsMiddleware";
 
 async function postInters(req: NextApiRequest, res: NextApiResponse) {
   const inters: { address: string; time: number }[] = req.body;
-  createIntersTableIfNotExists();
-  await emptyIntersTable();
   const values: [string, number][] = inters.map((inter) => [
     inter.address,
     inter.time,
   ]);
   try {
-    await insertInters(values);
+    await resetAndInsertInters(values);
     res.status(200).json({ message: "Inters saved successfully" });
   } catch (error) {
     if (error instanceof Error) {
