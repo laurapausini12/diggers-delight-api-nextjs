@@ -3,7 +3,7 @@ export default class Title {
   artistName: string;
   durationInHHMMSS: string;
   url: string;
-  releasedOnLocalDateString: string;
+  releasedOnInLocalDateString: string;
 
   constructor(
     title: string,
@@ -16,7 +16,7 @@ export default class Title {
     this.artistName = artistName;
     this.durationInHHMMSS = this.convertSecondsToHHMMSS(durationInSeconds);
     this.url = this.removeAllQueryParams(urlWithQueryParams);
-    this.releasedOnLocalDateString = new Date(
+    this.releasedOnInLocalDateString = new Date(
       releasedOnInTimestamp
     ).toLocaleDateString();
   }
