@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getInters as getDbInters, resetAndInsertInters } from "@src/dbService";
+import {
+  getInters as getDbInters,
+  resetAndInsertInters,
+} from "@services/dbService";
 import corsMiddleware from "@middlewares/corsMiddleware";
 
 async function postInters(req: NextApiRequest, res: NextApiResponse) {
