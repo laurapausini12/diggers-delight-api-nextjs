@@ -21,7 +21,7 @@ export default class Title {
     this.url = this.removeAllQueryParams(urlWithQueryParams);
     this.releasedOnInTimestamp = releasedOnInTimestamp;
     this.releasedOnInLocalDateString = new Date(
-      releasedOnInTimestamp
+      releasedOnInTimestamp * 1000
     ).toLocaleDateString();
   }
 
