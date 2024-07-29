@@ -20,13 +20,9 @@ export default class Title {
     this.durationInHHMMSS = this.convertSecondsToHHMMSS(durationInSeconds);
     this.url = this.removeAllQueryParams(urlWithQueryParams);
     this.releasedOnInTimestamp = releasedOnInTimestamp;
-    this.releasedOnInLocalDateString = new Date(
-      releasedOnInTimestamp * 1000
-    ).toLocaleDateString();
-  }
-
-  private pad(num: number): string {
-    return num.toString().padStart(2, "0");
+    this.releasedOnInLocalDateString = this.formatDate(
+      new Date(releasedOnInTimestamp * 1000)
+    );
   }
 
   private convertSecondsToHHMMSS(seconds: number): string {
@@ -34,6 +30,17 @@ export default class Title {
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${this.pad(hours)}:${this.pad(minutes)}:${this.pad(secs)}`;
+  }
+
+  private formatDate(date: Date): string {
+    const day = this.pad(date.getDate());
+    const month = this.pad(date.getMonth() + 1); // Months are zero-based
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  }
+
+  private pad(num: number): string {
+    return num.toString().padStart(2, "0");
   }
 
   private removeAllQueryParams(url: string): string {
