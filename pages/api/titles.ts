@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import corsMiddleware from "@middlewares/corsMiddleware";
 import TitlesController from "@controllers/titlesController";
+import Title from "@models/title";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -29,9 +30,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     inter = interQuery;
   }
 
-  const titles = TitlesController.getTitles(query, inter)
-    .then((titles) => {
-      res.status(200).json(titles);
+  TitlesController.getTitles(query, inter)
+    .then((titles: Title[] | undefined) => {
+      if (titles) {
+        const count = titles.length;
+        const response = {
+          count: count,
+          results: titles,
+        };
+
+        res.status(200).json(response);
+      } else {
+        res.status(200).json({ count: 0, results: [] });
+      }
     })
     .catch((error) => {
       if (error instanceof Error) {
