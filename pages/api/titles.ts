@@ -19,10 +19,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  const page = Number(req.query.page);
-  if (isNaN(page)) {
-    res.status(400).json({ error: "Page parameter must be a number" });
-    return;
+  let page;
+  if (req.query.page === undefined) {
+    page = 0;
+  } else {
+    page = Number(req.query.page);
+    if (isNaN(page)) {
+      res.status(400).json({ error: "Page parameter must be a number" });
+      return;
+    }
   }
 
   let interQuery = req.query.inter;

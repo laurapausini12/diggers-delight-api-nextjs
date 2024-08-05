@@ -28,11 +28,7 @@ function getTitlesFromNonNullResponseJson(remResultsJson: any): Title[] {
 }
 
 export default class TitlesController {
-  static async getTitles(
-    query: string,
-    page: number = 0,
-    inter: string | null
-  ) {
+  static async getTitles(query: string, page: number, inter: string | null) {
     if (!inter) {
       inter = await getMostAccurateInter();
       if (!inter) {
