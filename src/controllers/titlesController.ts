@@ -28,7 +28,11 @@ function getTitlesFromNonNullResponseJson(remResultsJson: any): Title[] {
 }
 
 export default class TitlesController {
-  static async getTitles(query: string, inter: string | null) {
+  static async getTitles(
+    query: string,
+    page: number = 0,
+    inter: string | null
+  ) {
     if (!inter) {
       inter = await getMostAccurateInter();
       if (!inter) {
@@ -41,7 +45,7 @@ export default class TitlesController {
     for (let i = 0; i < MAX_RETRIES; i++) {
       console.log(`Try number ${i + 1}`);
       try {
-        const result: string = await postRemData(inter, query);
+        const result: string = await postRemData(inter, query, page);
         const jsonText = extractStringBetweenFirstAndLastParentheses(result);
         const json = JSON.parse(jsonText);
         const response = json["response"];

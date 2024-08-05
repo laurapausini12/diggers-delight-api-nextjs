@@ -17,7 +17,8 @@ export const TITLE_FIELDS = {
 
 export async function postData(
   interAddress: string,
-  query: string
+  query: string,
+  page: number
 ): Promise<any> {
   // As Axios timeout is not working with https-proxy-agent, we also need to use a custom timeout.
   const source: CancelTokenSource = axios.CancelToken.source();
@@ -31,7 +32,7 @@ export async function postData(
 
     let data = {
       q: query,
-      page: "0",
+      page: page,
     };
     const response = await axios.post(URL, data, {
       httpAgent: interAgent,

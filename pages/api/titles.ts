@@ -19,6 +19,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
+  const page = Number(req.query.page);
+  if (isNaN(page)) {
+    res.status(400).json({ error: "Page parameter must be a number" });
+    return;
+  }
+
   let interQuery = req.query.inter;
   let inter: string | null = null;
 
@@ -30,7 +36,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     inter = interQuery;
   }
 
-  TitlesController.getTitles(query, inter)
+  TitlesController.getTitles(query, page, inter)
     .then((titles: Title[] | undefined) => {
       if (titles) {
         const count = titles.length;
