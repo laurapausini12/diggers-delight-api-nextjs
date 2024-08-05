@@ -40,8 +40,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     .then((titles: Title[] | undefined) => {
       if (titles) {
         const count = titles.length;
+        const hasMore = count === 29;
         const response = {
           count: count,
+          hasMore: hasMore,
           results: titles,
         };
 
